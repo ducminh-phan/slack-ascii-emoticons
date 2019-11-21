@@ -22,10 +22,13 @@ provider:
   region: us-west-2
 
 functions:
-  hello:
+  default:
     handler: src/handler.default
     memorySize: 128
     events:
       - http:
           path: /webhook
           method: post
+    environment:
+      SLACK_SIGNING_SECRET: ${env:SLACK_SIGNING_SECRET}
+      SLACK_OAUTH_ACCESS_TOKEN: ${env:SLACK_OAUTH_ACCESS_TOKEN}
