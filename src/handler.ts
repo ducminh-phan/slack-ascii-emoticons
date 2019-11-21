@@ -3,6 +3,8 @@ import { parse } from "querystring";
 import { createHmac } from "crypto";
 import * as slack from "slack";
 
+import emoMapping from "./emoMapping";
+
 const isValidSlackRequest = (
   headers: APIGatewayEvent["headers"],
   body: APIGatewayEvent["body"],
@@ -18,6 +20,23 @@ const isValidSlackRequest = (
   return `v0=${hmac.digest("hex")}` === signature;
 };
 
+const getHelpMessage = (): string => {
+  let helpMessage = "";
+  for (const emo in emoMapping) {
+    helpMessage += "*" + emo + "*: " + emoMapping[emo] + "\n";
+  }
+
+  return helpMessage;
+};
+
+const getResponseMessage = (text: string): string => {
+  if (text === "help") {
+    return getHelpMessage();
+  }
+
+  return emoMapping[text] ?? "";
+};
+
 export default async (event: APIGatewayEvent): Promise<object> => {
   console.log(JSON.stringify(event));
 
@@ -29,12 +48,14 @@ export default async (event: APIGatewayEvent): Promise<object> => {
     };
   }
 
+  const message = getResponseMessage(text as string);
+
   try {
     await slack.chat.postMessage({
       token: process.env.SLACK_OAUTH_ACCESS_TOKEN,
       channel: channel_id,
-      text: `Got ${text}`,
-      as_user: true,
+      text: message,
+      as_user: text !== "help",
     });
   } catch (e) {
     console.log(e);
