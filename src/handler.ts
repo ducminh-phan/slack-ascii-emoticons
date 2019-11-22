@@ -1,17 +1,14 @@
 import { APIGatewayEvent, APIGatewayProxyResult } from "aws-lambda";
 import { parse } from "querystring";
 import { createHmac } from "crypto";
-import * as slack from "slack";
+import axios, { AxiosResponse } from "axios";
 
 import emoMapping from "./emoMapping";
 
 interface SlackRequestBody {
-  token: string;
-  team_id: string;
-  channel_id: string;
-  user_id: string;
-  user_name: string;
   text: string;
+  user_id: string;
+  response_url: string;
 }
 
 const isValidSlackRequest = (
@@ -35,39 +32,36 @@ const getHelpMessage = (): string => {
     .join("\n");
 };
 
-const handleHelp = async ({ channel_id, user_id }): Promise<void> => {
-  await slack.chat.postEphemeral({
-    token: process.env.SLACK_OAUTH_ACCESS_TOKEN,
-    channel: channel_id,
-    user: user_id,
-    text: getHelpMessage(),
-  });
+const isHelpRequested = (requestText: string): boolean => {
+  return requestText === "help";
 };
 
-const handleEmo = async ({ channel_id, text, user_name }): Promise<void> => {
-  await slack.chat.postMessage({
-    token: process.env.SLACK_OAUTH_ACCESS_TOKEN,
-    channel: channel_id,
-    text: emoMapping[text],
-    username: user_name,
-  });
+const emoNotFound = (requestText: string): boolean => {
+  return !(requestText in emoMapping);
 };
 
-const handleNoEmo = async ({ channel_id, user_id }): Promise<void> => {
-  await slack.chat.postEphemeral({
-    token: process.env.SLACK_OAUTH_ACCESS_TOKEN,
-    channel: channel_id,
-    user: user_id,
-    text: "No such emo (yet)!",
-  });
+const getResponseText = (requestText: string, user_id: string): string => {
+  if (isHelpRequested(requestText)) {
+    return getHelpMessage();
+  } else if (emoNotFound(requestText)) {
+    return "No such emo!";
+  } else {
+    return `<@${user_id}>: ${emoMapping[requestText]}`;
+  }
 };
 
-const handleError = async ({ channel_id, user_id }): Promise<void> => {
-  await slack.chat.postEphemeral({
-    token: process.env.SLACK_OAUTH_ACCESS_TOKEN,
-    channel: channel_id,
-    user: user_id,
-    text: "Something went wrong!",
+const getResponseType = (requestText: string): string => {
+  return requestText in emoMapping ? "in_channel" : "ephemeral";
+};
+
+const respond = async (
+  response_url: string,
+  data: object,
+): Promise<AxiosResponse> => {
+  return axios.post(response_url, data, {
+    headers: {
+      Authorization: `Bearer ${process.env.SLACK_OAUTH_ACCESS_TOKEN}`,
+    },
   });
 };
 
@@ -76,8 +70,6 @@ export default async (
 ): Promise<APIGatewayProxyResult> => {
   console.log(JSON.stringify(event));
 
-  const parsedBody = (parse(event.body) as unknown) as SlackRequestBody;
-
   if (!isValidSlackRequest(event.headers, event.body)) {
     return {
       statusCode: 400,
@@ -85,18 +77,14 @@ export default async (
     };
   }
 
-  try {
-    if (parsedBody.text === "help") {
-      await handleHelp(parsedBody);
-    } else if (!(parsedBody.text in emoMapping)) {
-      await handleNoEmo(parsedBody);
-    } else {
-      await handleEmo(parsedBody);
-    }
-  } catch (e) {
-    console.log(e);
-    await handleError(parsedBody);
-  }
+  const { text, user_id, response_url } = (parse(
+    event.body,
+  ) as unknown) as SlackRequestBody;
+
+  await respond(response_url, {
+    text: getResponseText(text, user_id),
+    response_type: getResponseType(text),
+  });
 
   return {
     statusCode: 200,
