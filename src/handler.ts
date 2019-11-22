@@ -1,4 +1,4 @@
-import { APIGatewayEvent } from "aws-lambda";
+import { APIGatewayEvent, APIGatewayProxyResult } from "aws-lambda";
 import { parse } from "querystring";
 import { createHmac } from "crypto";
 import * as slack from "slack";
@@ -71,7 +71,9 @@ const handleError = async ({ channel_id, user_id }): Promise<void> => {
   });
 };
 
-export default async (event: APIGatewayEvent): Promise<object> => {
+export default async (
+  event: APIGatewayEvent,
+): Promise<APIGatewayProxyResult> => {
   console.log(JSON.stringify(event));
 
   const parsedBody = (parse(event.body) as unknown) as SlackRequestBody;
@@ -79,6 +81,7 @@ export default async (event: APIGatewayEvent): Promise<object> => {
   if (!isValidSlackRequest(event.headers, event.body)) {
     return {
       statusCode: 400,
+      body: null,
     };
   }
 
@@ -97,5 +100,6 @@ export default async (event: APIGatewayEvent): Promise<object> => {
 
   return {
     statusCode: 200,
+    body: null,
   };
 };
