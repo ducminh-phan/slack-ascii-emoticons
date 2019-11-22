@@ -19,7 +19,8 @@
         "allowForLoopAfterthoughts": true
       }
     ],
-    "@typescript-eslint/camelcase": "off"
+    "@typescript-eslint/camelcase": "off",
+    "quote-props": ["warn", "consistent-as-needed"]
   },
   "settings": {
     "import/resolver": {
