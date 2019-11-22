@@ -5,6 +5,15 @@ import * as slack from "slack";
 
 import emoMapping from "./emoMapping";
 
+interface SlackRequestBody {
+  token: string;
+  team_id: string;
+  channel_id: string;
+  user_id: string;
+  user_name: string;
+  text: string;
+}
+
 const isValidSlackRequest = (
   headers: APIGatewayEvent["headers"],
   body: APIGatewayEvent["body"],
@@ -29,18 +38,46 @@ const getHelpMessage = (): string => {
   return helpMessage;
 };
 
-const getResponseMessage = (text: string): string => {
-  if (text === "help") {
-    return getHelpMessage();
-  }
+const handleHelp = async ({ channel_id, user_id }): Promise<void> => {
+  await slack.chat.postEphemeral({
+    token: process.env.SLACK_OAUTH_ACCESS_TOKEN,
+    channel: channel_id,
+    user: user_id,
+    text: getHelpMessage(),
+  });
+};
 
-  return emoMapping[text] ?? "";
+const handleEmo = async ({ channel_id, text, user_name }): Promise<void> => {
+  await slack.chat.postMessage({
+    token: process.env.SLACK_OAUTH_ACCESS_TOKEN,
+    channel: channel_id,
+    text: emoMapping[text],
+    username: user_name,
+  });
+};
+
+const handleNoEmo = async ({ channel_id, user_id }): Promise<void> => {
+  await slack.chat.postEphemeral({
+    token: process.env.SLACK_OAUTH_ACCESS_TOKEN,
+    channel: channel_id,
+    user: user_id,
+    text: "No such emo (yet)!",
+  });
+};
+
+const handleError = async ({ channel_id, user_id }): Promise<void> => {
+  await slack.chat.postEphemeral({
+    token: process.env.SLACK_OAUTH_ACCESS_TOKEN,
+    channel: channel_id,
+    user: user_id,
+    text: "Something went wrong!",
+  });
 };
 
 export default async (event: APIGatewayEvent): Promise<object> => {
   console.log(JSON.stringify(event));
 
-  const { text, channel_id } = parse(event.body);
+  const parsedBody = (parse(event.body) as unknown) as SlackRequestBody;
 
   if (!isValidSlackRequest(event.headers, event.body)) {
     return {
@@ -48,21 +85,17 @@ export default async (event: APIGatewayEvent): Promise<object> => {
     };
   }
 
-  const message = getResponseMessage(text as string);
-
   try {
-    await slack.chat.postMessage({
-      token: process.env.SLACK_OAUTH_ACCESS_TOKEN,
-      channel: channel_id,
-      text: message,
-      as_user: text !== "help",
-    });
+    if (parsedBody.text === "help") {
+      await handleHelp(parsedBody);
+    } else if (!(parsedBody.text in emoMapping)) {
+      await handleNoEmo(parsedBody);
+    } else {
+      await handleEmo(parsedBody);
+    }
   } catch (e) {
     console.log(e);
-
-    return {
-      statusCode: 500,
-    };
+    await handleError(parsedBody);
   }
 
   return {
