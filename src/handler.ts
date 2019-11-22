@@ -30,12 +30,9 @@ const isValidSlackRequest = (
 };
 
 const getHelpMessage = (): string => {
-  let helpMessage = "";
-  for (const emo in emoMapping) {
-    helpMessage += "*" + emo + "*: " + emoMapping[emo] + "\n";
-  }
-
-  return helpMessage;
+  return Object.keys(emoMapping)
+    .map(name => `\`${name}\`: ${emoMapping[name]}`)
+    .join("\n");
 };
 
 const handleHelp = async ({ channel_id, user_id }): Promise<void> => {
