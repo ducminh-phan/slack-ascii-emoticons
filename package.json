@@ -18,7 +18,9 @@
     "lint-staged": "^9.4.3",
     "prettier": "^1.19.1",
     "pretty-quick": "^2.0.1",
+    "serverless-aws-documentation": "^1.1.0",
     "serverless-plugin-typescript": "^1.1.9",
+    "serverless-reqvalidator-plugin": "^1.0.3",
     "typescript": "^3.7.2"
   },
   "dependencies": {
