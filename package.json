@@ -1,0 +1,45 @@
+{
+  "name": "slack-ascii-emoticons",
+  "version": "1.0.0",
+  "description": "Slack app to have fun with ASCII emoticons",
+  "main": "index.js",
+  "repository": "https://github.com/ducminh-phan/ascii-memes",
+  "author": "Duc-Minh Phan <alephvn@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^12.12.11",
+    "@typescript-eslint/eslint-plugin": "^2.8.0",
+    "@typescript-eslint/parser": "^2.8.0",
+    "eslint": "^6.6.0",
+    "eslint-config-prettier": "^6.7.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-prettier": "^3.1.1",
+    "husky": "^3.1.0",
+    "lint-staged": "^9.4.3",
+    "prettier": "^1.19.1",
+    "pretty-quick": "^2.0.1",
+    "serverless-aws-documentation": "^1.1.0",
+    "serverless-plugin-typescript": "^1.1.9",
+    "serverless-reqvalidator-plugin": "^1.0.3",
+    "typescript": "^3.7.2"
+  },
+  "dependencies": {
+    "@types/aws-lambda": "^8.10.36",
+    "axios": "^0.19.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,ts}": [
+      "eslint --fix",
+      "git add"
+    ],
+    "*.{js,ts,json,md}": [
+      "prettier --write",
+      "git add"
+    ]
+  }
+}

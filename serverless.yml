@@ -1,0 +1,55 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: slack-ascii-emoticons
+
+plugins:
+  - serverless-aws-documentation
+  - serverless-plugin-typescript
+  - serverless-reqvalidator-plugin
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: us-west-2
+
+custom:
+  documentation: null
+
+functions:
+  default:
+    handler: src/handler.default
+    memorySize: 128
+    events:
+      - http:
+          path: /webhook
+          method: post
+          request:
+            parameters:
+              headers:
+                X-Slack-Signature: true
+                X-Slack-Request-Timestamp: true
+          reqValidatorName: SlackRequestValidator
+    environment:
+      SLACK_SIGNING_SECRET: ${env:SLACK_SIGNING_SECRET}
+      SLACK_OAUTH_ACCESS_TOKEN: ${env:SLACK_OAUTH_ACCESS_TOKEN}
+
+resources:
+  Resources:
+    SlackRequestValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: false
+        ValidateRequestParameters: true
