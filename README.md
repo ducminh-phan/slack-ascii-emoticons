@@ -36,6 +36,7 @@ slack-ascii-emoticons is a Slack app to send ASCII emoticons. (Technically, it s
   ```
   /<slash command> <emoticon name>
   ```
+- To add/remove emoticons, you just need to edit `src/emoMapping.ts` and redeploy, or edit `src/emoMapping.js` directly in the Lambda console.
 
 ## Contributing
 
