@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@types/aws-lambda": "^8.10.36",
-    "axios": "^0.19.0"
+    "axios": "^0.21.1"
   },
   "husky": {
     "hooks": {
