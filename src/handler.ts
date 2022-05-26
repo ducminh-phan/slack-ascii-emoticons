@@ -1,7 +1,7 @@
 import { APIGatewayEvent, APIGatewayProxyResult } from "aws-lambda";
-import { parse } from "querystring";
-import { createHmac } from "crypto";
 import axios, { AxiosResponse } from "axios";
+import { createHmac } from "crypto";
+import { parse } from "querystring";
 
 import emoMapping from "./emoMapping";
 
@@ -28,7 +28,7 @@ const isValidSlackRequest = (
 
 const getHelpMessage = (): string => {
   return Object.keys(emoMapping)
-    .map(name => `\`${name}\`: ${emoMapping[name]}`)
+    .map((name) => `\`${name}\`: ${emoMapping[name]}`)
     .join("\n");
 };
 
@@ -77,9 +77,9 @@ export default async (
     };
   }
 
-  const { text, user_id, response_url } = (parse(
+  const { text, user_id, response_url } = parse(
     event.body,
-  ) as unknown) as SlackRequestBody;
+  ) as unknown as SlackRequestBody;
 
   await respond(response_url, {
     text: getResponseText(text, user_id),
