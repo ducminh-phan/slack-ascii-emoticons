@@ -1,3 +1,5 @@
+frameworkVersion: "3"
+
 service: slack-ascii-emoticons
 
 plugins:
@@ -7,7 +9,7 @@ plugins:
 
 provider:
   name: aws
-  runtime: nodejs16.x
+  runtime: nodejs20.x
   region: us-east-1
 
 custom:
